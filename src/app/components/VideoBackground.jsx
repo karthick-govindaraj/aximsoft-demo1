@@ -34,7 +34,7 @@ export default function VideoBackground() {
 
   <mesh position={[0, 0, -9.9]}>
     <planeGeometry args={[20, 10]} />
-    <meshBasicMaterial color="black" transparent opacity={0.5} />
+    <meshBasicMaterial color="black" transparent opacity={0.3} />
   </mesh>
 </>
 

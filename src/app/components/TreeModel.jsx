@@ -49,8 +49,8 @@ export default function TreeModel({ position = [0, 0, 0], scale = 0 }) {
       scene.rotation.set(0, 0, 0);
       scene.traverse((child) => {
         if (child.isMesh) {
-          child.castShadow = true;
-          child.receiveShadow = true;
+          // child.castShadow = true;
+          // child.receiveShadow = true;
           const material = child.material;
           if (Array.isArray(material)) {
             material.forEach((mat) => {
@@ -106,7 +106,7 @@ export default function TreeModel({ position = [0, 0, 0], scale = 0 }) {
       ease: "power2.out",
     });
     const t = performance.now() / 1000;
-    modelRef.current.position.y = position[1] + Math.sin(t * 0.5) * 0.05;
+    // modelRef.current.position.y = position[1] + Math.sin(t * 0.5) * 0.05;
   });
 
   return (
@@ -130,7 +130,7 @@ export default function TreeModel({ position = [0, 0, 0], scale = 0 }) {
           padding: "6px 12px",
           // borderRadius: "8px",
           color: "white",
-          fontSize: "18px",
+          fontSize: "22px",
           whiteSpace: "nowrap",
         }}
       >

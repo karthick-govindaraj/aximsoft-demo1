@@ -126,11 +126,11 @@ export default function TreeModel({ position = [0, 0, 0], scale = 0 }) {
         style={{
           opacity: visible ? 1 : 0,
           transition: "opacity 0.5s ease-in-out",
-          background: "rgba(0, 0, 0, 0.6)",
+          // background: "rgba(0, 0, 0, 0.6)",
           padding: "6px 12px",
-          borderRadius: "8px",
+          // borderRadius: "8px",
           color: "white",
-          fontSize: "14px",
+          fontSize: "18px",
           whiteSpace: "nowrap",
         }}
       >

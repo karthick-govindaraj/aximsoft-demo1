@@ -6,6 +6,7 @@ import { OrbitControls, OrthographicCamera,useProgress,Environment, Preload } fr
 import TreeModel from './TreeModel'
 import Particles from './Particles'
 import Annotations from './Annotations'
+import VideoBackground from './VideoBackground'
 import RadialGradientBackground from './RadialGradientBackground'
 import Loader from './Loader'
 import ChatWindowManager from './ChatWindowManager'
@@ -55,7 +56,8 @@ export default function Scene() {
             />
       <color attach="background" args={['#000']} />
       <fog attach="fog" args={['#000', 5, 20]} />
-      <RadialGradientBackground />
+      {/* <RadialGradientBackground /> */}
+      <VideoBackground />
       <ambientLight intensity={0.6} />
       <directionalLight 
         position={[5, 5, 5]} 

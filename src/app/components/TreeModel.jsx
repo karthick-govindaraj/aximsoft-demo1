@@ -129,19 +129,20 @@ export default function TreeModel({ position = [0, 0, 0], scale = 0 }) {
 
           return (
             <Text
-              key={i}
-              ref={textRefs.current[i]}
-              position={[x, 2, z]}
-              rotation={[0, -angle, 0]}
-              fontSize={i === activeSentenceIndex ? 0.15 : 0.10}
-              maxWidth={2}
-              textAlign="center"
-              anchorX="center"
-              anchorY="middle"
-              color={i === activeSentenceIndex ? "#ffcc00" : "white"}
-              fillOpacity={i === activeSentenceIndex ? 1 : 0.7}
-              outlineWidth={i === activeSentenceIndex ? 0.01 : 0}
-              outlineColor="#000000"
+            key={i}
+            ref={textRefs.current[i]}
+            position={[x, 2, z]}
+            rotation={[0, -angle, 0]}
+            fontSize={0.14} // Use same font size for all (optional)
+            maxWidth={2}
+            textAlign="center"
+            fontFamily= "KodeMono"
+            fontWeight={500}
+            anchorX="center"
+            anchorY="middle"
+            color="white" // Same color for all
+            fillOpacity={i === activeSentenceIndex ? 1 : 0.4} // 👈 Opacity changes based on active
+            outlineWidth={0}
             >
               {sentence}
             </Text>

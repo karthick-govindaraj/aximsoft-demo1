@@ -1,8 +1,9 @@
 "use client";
+
 import { useRef, useEffect, useState } from "react";
 import { useFrame } from "@react-three/fiber";
-import * as THREE from 'three';
-import { useGLTF, Html } from "@react-three/drei";
+import * as THREE from "three";
+import { useGLTF, Text } from "@react-three/drei";
 import gsap from "gsap";
 
 const textboxContent = [
@@ -15,42 +16,26 @@ const textboxContent = [
 ];
 
 export default function TreeModel({ position = [0, 0, 0], scale = 0 }) {
-  const modelRef = useRef();
+  const treeRef = useRef();        // Only Tree
+  const textGroupRef = useRef();   // Only Text
+  const textRefs = useRef(textboxContent.map(() => useRef()));
   const { scene } = useGLTF("/models/tree.glb");
   const [direction, setDirection] = useState("center");
-  const [visibleIndex, setVisibleIndex] = useState(0);
+  const [activeSentenceIndex, setActiveSentenceIndex] = useState(0);
 
-  const textboxMessages = [
-    "Great ideas need landing gear as much as wings",
-    "Presence is more than just being there",
-    "What gets measured, gets managed",
-    "We rise by lifting others",
-    "Penny saved is penny earned",
-    "Your largest fear carries your greatest growth",
-  ];
-  
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [visible, setVisible] = useState(true);
-  
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setVisible(false); // Start fade out
-      setTimeout(() => {
-        setCurrentIndex((prev) => (prev + 1) % textboxMessages.length);
-        setVisible(true); // Fade in next message
-      }, 500); // Allow fade-out duration (0.5s)
-    }, 2000);
-  
-    return () => clearInterval(interval);
-  }, []);
+  const handlePointerMove = (e) => {
+    const x = e.clientX;
+    const width = window.innerWidth;
+    if (x < width * 0.4) setDirection("left");
+    else if (x > width * 0.6) setDirection("right");
+    else setDirection("center");
+  };
 
   useEffect(() => {
     if (scene) {
       scene.rotation.set(0, 0, 0);
       scene.traverse((child) => {
         if (child.isMesh) {
-          // child.castShadow = true;
-          // child.receiveShadow = true;
           const material = child.material;
           if (Array.isArray(material)) {
             material.forEach((mat) => {
@@ -66,77 +51,103 @@ export default function TreeModel({ position = [0, 0, 0], scale = 0 }) {
     }
 
     const tl = gsap.timeline();
-    tl.fromTo(modelRef.current.position, { y: -5 }, { y: position[1], duration: 2, ease: "elastic.out(1, 0.5)" });
-    tl.fromTo(modelRef.current.rotation, { y: -Math.PI }, { y: 0, duration: 3, ease: "power2.out" }, "-=1.5");
-    tl.fromTo(modelRef.current.scale, { x: 0, y: 0, z: 0 }, { x: scale, y: scale, z: scale, duration: 1.5, ease: "back.out(1.7)" }, "-=2.5");
-
-    // Show messages one by one every 2 seconds
-    let i = 0;
-    const interval = setInterval(() => {
-      if (i < textboxContent.length) {
-        setVisibleIndex(i + 1);
-        i++;
-      } else {
-        clearInterval(interval);
-      }
-    }, 3000);
+    tl.fromTo(treeRef.current.position, { y: -5 }, { y: position[1], duration: 2, ease: "elastic.out(1, 0.5)" });
+    tl.fromTo(treeRef.current.rotation, { y: -Math.PI }, { y: 0, duration: 3, ease: "power2.out" }, "-=1.5");
+    tl.fromTo(treeRef.current.scale, { x: 0, y: 0, z: 0 }, { x: scale, y: scale, z: scale, duration: 1.5, ease: "back.out(1.7)" }, "-=2.5");
 
     window.addEventListener("mousemove", handlePointerMove);
+
     return () => {
       tl.kill();
-      clearInterval(interval);
       window.removeEventListener("mousemove", handlePointerMove);
     };
   }, [position, scale, scene]);
 
-  const handlePointerMove = (e) => {
-    const x = e.clientX;
-    const width = window.innerWidth;
-    if (x < width * 0.4) setDirection("left");
-    else if (x > width * 0.6) setDirection("right");
-    else setDirection("center");
-  };
-
   useFrame(({ clock }) => {
-    if (!modelRef.current) return;
+    if (!treeRef.current || !textGroupRef.current) return;
+
+    // Tree rotation only
     const targetRotation = { left: 0.3, right: -0.3, center: 0 };
-    gsap.to(modelRef.current.rotation, {
+    gsap.to(treeRef.current.rotation, {
       y: targetRotation[direction],
-      duration: 2,
+      duration: 5,
       ease: "power2.out",
     });
-    const t = performance.now() / 1000;
-    // modelRef.current.position.y = position[1] + Math.sin(t * 0.5) * 0.05;
+
+    // Text rotation only
+    const elapsedTime = clock.getElapsedTime();
+    const radius = 2.5;
+
+    textboxContent.forEach((_, i) => {
+      const angle = (i / textboxContent.length) * Math.PI * 2 + elapsedTime * 0.2;
+
+      const x = Math.sin(angle) * radius;
+      const z = Math.cos(angle) * radius;
+
+      if (textRefs.current[i]?.current) {
+        textRefs.current[i].current.position.set(x, 2, z);
+        textRefs.current[i].current.rotation.set(0, -angle, 0); // Keep text facing center
+      }
+    });
+
+    // Active text detection
+    let closestIndex = 0;
+    let closestAngle = Math.PI * 2;
+
+    textboxContent.forEach((_, i) => {
+      const angle = (i / textboxContent.length) * Math.PI * 2 + elapsedTime * 0.2;
+      const currentAngle = angle % (Math.PI * 2);
+
+      const angleToCamera = Math.min(Math.abs(currentAngle), Math.abs(Math.PI * 2 - currentAngle));
+
+      if (angleToCamera < closestAngle) {
+        closestAngle = angleToCamera;
+        closestIndex = i;
+      }
+    });
+
+    if (closestIndex !== activeSentenceIndex) {
+      setActiveSentenceIndex(closestIndex);
+    }
   });
 
   return (
-    <group ref={modelRef} position={position}>
-      <primitive object={scene} />
+    <group>
+      {/* Tree Model (only) */}
+      <group ref={treeRef} position={position} scale={[scale, scale, scale]}>
+        <primitive object={scene} />
+      </group>
 
-      {textboxContent.slice(0, visibleIndex).map((text, idx) => (
-        <Html
-        position={[0, -0.2, 0]}
-        center
-        distanceFactor={2}
-        occlude={false}
-        sprite
-        transform
-        zIndexRange={[1, 0]}
-        className="annotation-box"
-        style={{
-          opacity: visible ? 1 : 0,
-          transition: "opacity 0.5s ease-in-out",
-          // background: "rgba(0, 0, 0, 0.6)",
-          padding: "6px 12px",
-          // borderRadius: "8px",
-          color: "white",
-          fontSize: "22px",
-          whiteSpace: "nowrap",
-        }}
-      >
-        {textboxMessages[currentIndex]}
-      </Html>
-      ))}
+      {/* Texts (only) */}
+      <group ref={textGroupRef} position={[0, -3.8, 0]}>
+        {textboxContent.map((sentence, i) => {
+          const radius = 2.5;
+          const angle = (i / textboxContent.length) * Math.PI * 2;
+
+          const x = Math.sin(angle) * radius;
+          const z = Math.cos(angle) * radius;
+
+          return (
+            <Text
+              key={i}
+              ref={textRefs.current[i]}
+              position={[x, 2, z]}
+              rotation={[0, -angle, 0]}
+              fontSize={i === activeSentenceIndex ? 0.15 : 0.10}
+              maxWidth={2}
+              textAlign="center"
+              anchorX="center"
+              anchorY="middle"
+              color={i === activeSentenceIndex ? "#ffcc00" : "white"}
+              fillOpacity={i === activeSentenceIndex ? 1 : 0.7}
+              outlineWidth={i === activeSentenceIndex ? 0.01 : 0}
+              outlineColor="#000000"
+            >
+              {sentence}
+            </Text>
+          );
+        })}
+      </group>
     </group>
   );
 }

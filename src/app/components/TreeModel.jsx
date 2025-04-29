@@ -106,6 +106,7 @@ export default function TreeModel({ position = [0, 0, 0], scale = 0 }) {
       }
     });
 
+    
     if (closestIndex !== activeSentenceIndex) {
       setActiveSentenceIndex(closestIndex);
     }

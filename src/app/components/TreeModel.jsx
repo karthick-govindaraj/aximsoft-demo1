@@ -12,12 +12,12 @@ const textboxContent = [
   "What gets measured, gets managed",
   "We rise by lifting others",
   "Penny saved is penny earned",
-  "Your largest fear carries your greatest growth"
+  "Your largest fear carries your greatest growth",
 ];
 
 export default function TreeModel({ position = [0, 0, 0], scale = 0 }) {
-  const treeRef = useRef();        // Only Tree
-  const textGroupRef = useRef();   // Only Text
+  const treeRef = useRef(); // Only Tree
+  const textGroupRef = useRef(); // Only Text
   const textRefs = useRef(textboxContent.map(() => useRef()));
   const { scene } = useGLTF("/models/tree.glb");
   const [direction, setDirection] = useState("center");
@@ -51,9 +51,23 @@ export default function TreeModel({ position = [0, 0, 0], scale = 0 }) {
     }
 
     const tl = gsap.timeline();
-    tl.fromTo(treeRef.current.position, { y: -5 }, { y: position[1], duration: 2, ease: "elastic.out(1, 0.5)" });
-    tl.fromTo(treeRef.current.rotation, { y: -Math.PI }, { y: 0, duration: 3, ease: "power2.out" }, "-=1.5");
-    tl.fromTo(treeRef.current.scale, { x: 0, y: 0, z: 0 }, { x: scale, y: scale, z: scale, duration: 1.5, ease: "back.out(1.7)" }, "-=2.5");
+    tl.fromTo(
+      treeRef.current.position,
+      { y: -5 },
+      { y: position[1], duration: 2, ease: "elastic.out(1, 0.5)" }
+    );
+    tl.fromTo(
+      treeRef.current.rotation,
+      { y: -Math.PI },
+      { y: 0, duration: 3, ease: "power2.out" },
+      "-=1.5"
+    );
+    tl.fromTo(
+      treeRef.current.scale,
+      { x: 0, y: 0, z: 0 },
+      { x: scale, y: scale, z: scale, duration: 1.5, ease: "back.out(1.7)" },
+      "-=2.5"
+    );
 
     window.addEventListener("mousemove", handlePointerMove);
 
@@ -79,7 +93,8 @@ export default function TreeModel({ position = [0, 0, 0], scale = 0 }) {
     const radius = 2.5;
 
     textboxContent.forEach((_, i) => {
-      const angle = (i / textboxContent.length) * Math.PI * 2 + elapsedTime * 0.2;
+      const angle =
+        (i / textboxContent.length) * Math.PI * 2 + elapsedTime * 0.2;
 
       const x = Math.sin(angle) * radius;
       const z = Math.cos(angle) * radius;
@@ -95,10 +110,14 @@ export default function TreeModel({ position = [0, 0, 0], scale = 0 }) {
     let closestAngle = Math.PI * 2;
 
     textboxContent.forEach((_, i) => {
-      const angle = (i / textboxContent.length) * Math.PI * 2 + elapsedTime * 0.2;
+      const angle =
+        (i / textboxContent.length) * Math.PI * 2 + elapsedTime * 0.2;
       const currentAngle = angle % (Math.PI * 2);
 
-      const angleToCamera = Math.min(Math.abs(currentAngle), Math.abs(Math.PI * 2 - currentAngle));
+      const angleToCamera = Math.min(
+        Math.abs(currentAngle),
+        Math.abs(Math.PI * 2 - currentAngle)
+      );
 
       if (angleToCamera < closestAngle) {
         closestAngle = angleToCamera;
@@ -130,20 +149,20 @@ export default function TreeModel({ position = [0, 0, 0], scale = 0 }) {
 
           return (
             <Text
-            key={i}
-            ref={textRefs.current[i]}
-            position={[x, 2, z]}
-            rotation={[0, -angle, 0]}
-            fontSize={0.14} // Use same font size for all (optional)
-            maxWidth={2}
-            textAlign="center"
-            fontFamily= "KodeMono"
-            fontWeight={500}
-            anchorX="center"
-            anchorY="middle"
-            color="white" // Same color for all
-            fillOpacity={i === activeSentenceIndex ? 1 : 0.4} // 👈 Opacity changes based on active
-            outlineWidth={0}
+              font="/fonts/Kode_Mono/static/KodeMono-Regular.ttf"
+              key={i}
+              ref={textRefs.current[i]}
+              position={[x, 2, z]}
+              rotation={[0, -angle, 0]}
+              fontSize={0.09} // Use same font size for all (optional)
+              maxWidth={2.5}
+              textAlign="center"
+              fontWeight={500}
+              anchorX="center"
+              anchorY="middle"
+              color="white" // Same color for all
+              fillOpacity={i === activeSentenceIndex ? 1 : 0.4} // 👈 Opacity changes based on active
+              outlineWidth={0}
             >
               {sentence}
             </Text>

@@ -16,8 +16,8 @@ const textboxContent = [
 ];
 
 export default function TreeModel({ position = [0, 0, 0], scale = 0 }) {
-  const treeRef = useRef(); // Only Tree
-  const textGroupRef = useRef(); // Only Text
+  const treeRef = useRef();
+  const textGroupRef = useRef();
   const textRefs = useRef(textboxContent.map(() => useRef()));
   const { scene } = useGLTF("/models/tree.glb");
   const [direction, setDirection] = useState("center");
@@ -70,7 +70,6 @@ export default function TreeModel({ position = [0, 0, 0], scale = 0 }) {
     );
 
     window.addEventListener("mousemove", handlePointerMove);
-
     return () => {
       tl.kill();
       window.removeEventListener("mousemove", handlePointerMove);
@@ -80,7 +79,6 @@ export default function TreeModel({ position = [0, 0, 0], scale = 0 }) {
   useFrame(({ clock }) => {
     if (!treeRef.current || !textGroupRef.current) return;
 
-    // Tree rotation only
     const targetRotation = { left: 0.3, right: -0.3, center: 0 };
     gsap.to(treeRef.current.rotation, {
       y: targetRotation[direction],
@@ -88,32 +86,33 @@ export default function TreeModel({ position = [0, 0, 0], scale = 0 }) {
       ease: "power2.out",
     });
 
-    // Text rotation only
     const elapsedTime = clock.getElapsedTime();
     const radius = 2.5;
-
-    textboxContent.forEach((_, i) => {
-      const angle =
-        (i / textboxContent.length) * Math.PI * 2 + elapsedTime * 0.2;
-
-      const x = Math.sin(angle) * radius;
-      const z = Math.cos(angle) * radius;
-
-      if (textRefs.current[i]?.current) {
-        textRefs.current[i].current.position.set(x, 2, z);
-        textRefs.current[i].current.rotation.set(0, -angle, 0); // Keep text facing center
-      }
-    });
-
-    // Active text detection
     let closestIndex = 0;
     let closestAngle = Math.PI * 2;
 
     textboxContent.forEach((_, i) => {
       const angle =
-        (i / textboxContent.length) * Math.PI * 2 + elapsedTime * 0.2;
-      const currentAngle = angle % (Math.PI * 2);
+        (i / textboxContent.length) * Math.PI * 2 + elapsedTime * 0.1; // slowed rotation
 
+      const x = Math.sin(angle) * radius;
+      const z = Math.cos(angle) * radius;
+
+      const ref = textRefs.current[i]?.current;
+      if (ref) {
+        // Update position and face center
+        ref.position.set(x, 2, z);
+        ref.rotation.set(0, -angle, 0);
+
+        // Smooth opacity animation
+        const targetOpacity = i === activeSentenceIndex ? 1 : 0.4;
+        if (ref.material) {
+          ref.material.opacity += (targetOpacity - ref.material.opacity) * 0.1;
+        }
+      }
+
+      // Determine which sentence is closest to front
+      const currentAngle = angle % (Math.PI * 2);
       const angleToCamera = Math.min(
         Math.abs(currentAngle),
         Math.abs(Math.PI * 2 - currentAngle)
@@ -132,36 +131,35 @@ export default function TreeModel({ position = [0, 0, 0], scale = 0 }) {
 
   return (
     <group>
-      {/* Tree Model (only) */}
+      {/* Tree Model */}
       <group ref={treeRef} position={position} scale={[scale, scale, scale]}>
         <primitive object={scene} />
       </group>
 
-      {/* Texts (only) */}
+      {/* Text Ring */}
       <group ref={textGroupRef} position={[0, -3.8, 0]}>
         {textboxContent.map((sentence, i) => {
           const radius = 2.5;
           const angle = (i / textboxContent.length) * Math.PI * 2;
-
           const x = Math.sin(angle) * radius;
           const z = Math.cos(angle) * radius;
 
           return (
             <Text
-              font="/fonts/Kode_Mono/static/KodeMono-Regular.ttf"
               key={i}
               ref={textRefs.current[i]}
+              font="/fonts/Kode_Mono/static/KodeMono-Regular.ttf"
               position={[x, 2, z]}
               rotation={[0, -angle, 0]}
-              fontSize={0.09} // Use same font size for all (optional)
+              fontSize={0.09}
               maxWidth={2.5}
               textAlign="center"
               fontWeight={500}
               anchorX="center"
               anchorY="middle"
-              color="white" // Same color for all
-              fillOpacity={i === activeSentenceIndex ? 1 : 0.4} // 👈 Opacity changes based on active
-              outlineWidth={0}
+              color="white"
+              material-transparent
+              material-opacity={0.4} // Start with default
             >
               {sentence}
             </Text>

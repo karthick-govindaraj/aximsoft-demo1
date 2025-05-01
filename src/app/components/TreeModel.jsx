@@ -88,7 +88,7 @@ export default function TreeModel({ position = [0, 0, 0], scale = 0 }) {
     }
 
     const elapsedTime = clock.getElapsedTime();
-    const radius = 2.5;
+    const radius = 2.3;
     let closestIndex = 0;
     let closestAngle = Math.PI * 2;
 
@@ -106,7 +106,7 @@ export default function TreeModel({ position = [0, 0, 0], scale = 0 }) {
         ref.rotation.set(0, -angle, 0);
 
         // Smooth opacity animation
-        const targetOpacity = i === activeSentenceIndex ? 1 : 0.2;
+        const targetOpacity = i === activeSentenceIndex ? 1 : 0.05;
         if (ref.material) {
           ref.material.opacity += (targetOpacity - ref.material.opacity) * 0.1;
         }
@@ -140,7 +140,7 @@ export default function TreeModel({ position = [0, 0, 0], scale = 0 }) {
       {/* Text Ring */}
       <group ref={textGroupRef} position={[0, -3.8, 0]}>
         {textboxContent.map((sentence, i) => {
-          const radius = 2.5;
+          const radius = 2.3;
           const angle = (i / textboxContent.length) * Math.PI * 2;
           const x = Math.sin(angle) * radius;
           const z = Math.cos(angle) * radius;
@@ -149,7 +149,7 @@ export default function TreeModel({ position = [0, 0, 0], scale = 0 }) {
             <Text
               key={i}
               ref={textRefs.current[i]}
-              font="/fonts/Kode_Mono/static/KodeMono-Bold.ttf"
+              font="/fonts/Kode_Mono/static/KodeMono-Regular.ttf"
               position={[x, 2, z]}
               rotation={[0, -angle, 0]}
               fontSize={0.09}
@@ -160,7 +160,7 @@ export default function TreeModel({ position = [0, 0, 0], scale = 0 }) {
               anchorY="middle"
               color="white"
               material-transparent
-              material-opacity={0.2} // Start with default
+              material-opacity={0.05} // Start with default
             >
               {sentence}
             </Text>

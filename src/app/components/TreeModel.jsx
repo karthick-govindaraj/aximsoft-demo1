@@ -20,16 +20,8 @@ export default function TreeModel({ position = [0, 0, 0], scale = 0 }) {
   const textGroupRef = useRef();
   const textRefs = useRef(textboxContent.map(() => useRef()));
   const { scene } = useGLTF("/models/tree.glb");
-  const [direction, setDirection] = useState("center");
   const [activeSentenceIndex, setActiveSentenceIndex] = useState(0);
-
-  const handlePointerMove = (e) => {
-    const x = e.clientX;
-    const width = window.innerWidth;
-    if (x < width * 0.4) setDirection("left");
-    else if (x > width * 0.6) setDirection("right");
-    else setDirection("center");
-  };
+  const targetRotation = useRef({ y: 0 });
 
   useEffect(() => {
     if (scene) {
@@ -69,22 +61,31 @@ export default function TreeModel({ position = [0, 0, 0], scale = 0 }) {
       "-=2.5"
     );
 
-    window.addEventListener("mousemove", handlePointerMove);
+    const handleMouseMove = (event) => {
+      // Get normalized mouse position (-1 to 1)
+      const x = (event.clientX / window.innerWidth) * 2 - 1;
+      
+      // Set target rotation based on mouse position
+      targetRotation.current = {
+        y: x * 0.5, // Controls rotation amount (0.5 = moderate rotation)
+      };
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
     return () => {
       tl.kill();
-      window.removeEventListener("mousemove", handlePointerMove);
+      window.removeEventListener("mousemove", handleMouseMove);
     };
   }, [position, scale, scene]);
 
   useFrame(({ clock }) => {
     if (!treeRef.current || !textGroupRef.current) return;
 
-    const targetRotation = { left: 0.3, right: -0.3, center: 0 };
-    gsap.to(treeRef.current.rotation, {
-      y: targetRotation[direction],
-      duration: 5,
-      ease: "power2.out",
-    });
+    // Smoothly interpolate rotation toward target
+    if (treeRef.current) {
+      treeRef.current.rotation.y += 
+        (targetRotation.current.y - treeRef.current.rotation.y) * 0.05;
+    }
 
     const elapsedTime = clock.getElapsedTime();
     const radius = 2.5;

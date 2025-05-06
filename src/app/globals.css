@@ -209,6 +209,41 @@ fieldset:disabled .btn {
   margin-top: 40px;
 }
 
+/* loader styles */
+.loader {
+  width: 50px;
+  height: 30px;
+  margin-left: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  animation: bounce 1.4s infinite ease-in-out both;
+}
+
+.dot:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.chat-window {
+  transition: all 0.5s ease;
+  transform-origin: bottom right;
+}
+
 
 *::-webkit-scrollbar {
   width: 6px;
@@ -225,10 +260,19 @@ fieldset:disabled .btn {
 }
 
 
-/* globals.css */
-.chat-window {
-  transition: all 0.5s ease;
-  transform-origin: bottom right;
+/* key frames */
+@keyframes bounce {
+  0% {
+    transform: scale(0);
+  }
+
+  100% {
+    transform: scale(0);
+  }
+
+  50% {
+    transform: scale(1);
+  }
 }
 
 

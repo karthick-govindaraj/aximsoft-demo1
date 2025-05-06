@@ -1,33 +1,35 @@
 import React, { useState, useEffect, useRef } from "react";
-import logo from "../../../public/images/axim-logo.svg";
 import Image from "next/image";
+import logo from "../../../public/images/axim-logo.svg";
+import { sendQueryToAPI } from "../../utils/chatApi"; // adjust path as needed
+import { v4 as uuidv4 } from "uuid";
 
 const ChatWindow = ({ onClose, isVisible }) => {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
-  const username = "User";
-
-
   const messagesEndRef = useRef(null);
 
-  const defaultBotReply = `Aximsoft facilitates startups to build the future. Our incubation program is conceptualized to bring ideas to life and to be always with you through the startup lifecycle. We strive to build extraordinary technology products and solutions that drive some of the brightest ideas and innovations.
-  Founded in 2005, Aximsoft is a full-scale technology firm headquartered in the USA with an offshore development center in India.
-  Aximsoft helps push the limits of what’s possible. We research, collaborate and innovate to put the latest technologies to work for you.`;
+  // Session ID stored in sessionStorage
+  const [sessionId] = useState(() => {
+    const existing = sessionStorage.getItem("chatSessionId");
+    if (existing) return existing;
+    const newId = uuidv4();
+    sessionStorage.setItem("chatSessionId", newId);
+    return newId;
+  });
 
   useEffect(() => {
     const savedMessages = sessionStorage.getItem("chatMessages");
     if (savedMessages) {
       const parsedMessages = JSON.parse(savedMessages);
       setMessages(parsedMessages);
-
       if (parsedMessages.some(msg => msg.sender === "user")) {
         setShowIntro(false);
       }
     }
   }, []);
-
 
   useEffect(() => {
     if (messages.length > 0) {
@@ -36,81 +38,90 @@ const ChatWindow = ({ onClose, isVisible }) => {
     }
   }, [messages]);
 
-  // 🔸 Typewriter effect function (not used but kept for later use)
-  const typeWriterEffect = (message) => {
-    let i = 0;
-    const interval = setInterval(() => {
-      if (i < message.length) {
-        setMessages((prevMessages) => [
-          ...prevMessages.slice(0, prevMessages.length - 1),
-          { text: message.slice(0, i + 1), sender: "bot" },
-        ]);
-        i++;
-      } else {
-        clearInterval(interval);
-      }
-    }, 10);
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "end"
+    });
   };
 
   const sendMessage = async (message, sender) => {
-    if (message.trim() !== "") {
-      if (showIntro && sender === 'user') {
-        setShowIntro(false);
-      }
+    if (message.trim() === "") return;
 
-      setMessages((prevMessages) => [...prevMessages, { text: message, sender }]);
+    if (showIntro && sender === "user") {
+      setShowIntro(false);
+    }
 
-      if (sender === "user") {
-        setLoading(true);
+    setMessages((prev) => [...prev, { text: message, sender }]);
 
-        const allowedQuestions = [
-          "About",
-          "About you",
-          "About aximsoft",
-          "Tell me about Aximsoft",
-          "About us",
-          "Tell me about you",
-          "Tell me about yourself"
-        ];
+    if (sender === "user") {
+      setLoading(true);
 
-        // Normalize function: lowercase + remove spaces
-        const normalize = str => str.toLowerCase().replace(/\s+/g, "");
+      const loadingMsgIndex = messages.length + 1;
+      const newBotMessage = { text: "", sender: "bot", isStreaming: true };
+      setMessages((prev) => [...prev, newBotMessage]);
 
-        // try {
-        //   const normalizedInput = normalize(message);
-        //   const match = allowedQuestions.some(q => normalize(q) === normalizedInput);
+      try {
+        const stream = await sendQueryToAPI(message, sessionId);
+        const reader = stream.getReader();
+        const decoder = new TextDecoder("utf-8");
 
-        //   const reply = match
-        //     ? defaultBotReply
-        //     : "I'm here to help! Can you please be more specific or ask something else?";
+        let done = false;
+        let buffer = "";
+        let fullMessage = "";
 
-        //   setMessages((prevMessages) => [...prevMessages, { text: reply, sender: "bot" }]);
-        // } 
-        try {
-          const input = message.toLowerCase();
+        while (!done) {
+          const { value, done: doneReading } = await reader.read();
+          done = doneReading;
 
-          const keywords = ["about", "aximsoft", "yourself", "you", "aboutus"];
+          const chunk = decoder.decode(value || new Uint8Array(), { stream: true });
+          buffer += chunk;
 
-          const isMatch = keywords.some((keyword) => input.includes(keyword));
+          // Split by newline in case multiple events are sent
+          const lines = buffer.split("\n");
+          buffer = lines.pop(); // Save any partial line for next read
 
-          const reply = isMatch
-            ? defaultBotReply
-            : "I'm here to help! Can you please be more specific or ask something else?";
+          for (let line of lines) {
+            line = line.trim();
+            if (line.startsWith("data:")) {
+              const content = line.replace(/^data:\s*/, "");
 
-          setMessages((prevMessages) => [...prevMessages, { text: reply, sender: "bot" }]);
+              if (content) {
+                // Append content to fullMessage (accumulating it over the stream)
+                fullMessage += content + " ";
+
+                // Update the state only once the message is ready
+                setMessages((prev) => {
+                  const updated = [...prev];
+                  updated[loadingMsgIndex].text = fullMessage; // Update the message text progressively
+                  return updated;
+                });
+              }
+            }
+          }
         }
-        catch (error) {
-          setMessages((prevMessages) => [
-            ...prevMessages,
-            { text: "Sorry, something went wrong. Please try again.", sender: "bot" }
-          ]);
-        } finally {
-          setLoading(false);
-        }
+      } catch (error) {
+        setMessages((prev) => {
+          const updated = [...prev];
+          updated[loadingMsgIndex] = {
+            text: "Something went wrong. Try again later.",
+            sender: "bot",
+          };
+          return updated;
+        });
+      } finally {
+        setMessages((prev) => {
+          const updated = [...prev];
+          if (updated[loadingMsgIndex]) {
+            updated[loadingMsgIndex].isStreaming = false;
+            updated[loadingMsgIndex].text = updated[loadingMsgIndex].text.trim();
+          }
+          return updated;
+        });
+        setLoading(false);
       }
     }
   };
-
 
 
   const handleButtonClick = () => {
@@ -125,13 +136,6 @@ const ChatWindow = ({ onClose, isVisible }) => {
       event.preventDefault();
       handleButtonClick();
     }
-  };
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "end"
-    });
   };
 
   return (
@@ -169,9 +173,18 @@ const ChatWindow = ({ onClose, isVisible }) => {
                     : "bot-message justify-start"
                     }`}
                 >
-                  <div className="text-msg">{msg.text}</div>
+                  {msg.isLoading || msg.isStreaming ? (
+                    <div className="loader d-flex align-items-center justify-content-between">
+                      <div className="dot"></div>
+                      <div className="dot"></div>
+                      <div className="dot"></div>
+                    </div>
+                  ) : (
+                    <div className="text-msg">{msg.text}</div>
+                  )}
                 </div>
               ))}
+
             </div>
             <div ref={messagesEndRef} />
           </div>

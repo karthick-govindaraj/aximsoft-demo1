@@ -2,14 +2,15 @@
 
 import { Canvas } from '@react-three/fiber'
 import { Suspense, useState, useEffect } from 'react'
-import { OrbitControls, OrthographicCamera,useProgress,Environment, Preload } from '@react-three/drei'
+import { OrbitControls, OrthographicCamera, useProgress, Environment, Preload  } from '@react-three/drei'
 import TreeModel from './TreeModel'
 import Particles from './Particles'
-import Annotations from './Annotations'
 import VideoBackground from './VideoBackground'
 import RadialGradientBackground from './RadialGradientBackground'
 import Loader from './Loader'
 import ChatWindowManager from './ChatWindowManager'
+import { EffectComposer, Bloom ,Selection} from '@react-three/postprocessing';
+
 export default function Scene() {
   const [isMounted, setIsMounted] = useState(false)
   const [zoom, setZoom] = useState(getZoom());
@@ -22,9 +23,10 @@ export default function Scene() {
       return (currentWidth / baseWidth) * baseZoom;
     }
   }
+  
   function LoadingManager() {
     const { progress, active } = useProgress()
-  return <Loader progress={progress} isLoading={active} />
+    return <Loader progress={progress} isLoading={active} />
   }
 
   useEffect(() => {
@@ -41,50 +43,60 @@ export default function Scene() {
 
   return (
     <>
-    <LoadingManager />
-    <Canvas
-      shadows
-      camera={{ position: [0, 0, 5], fov: 50 }}
-      className="bg-black"
-    >
+      <LoadingManager />
+      <Canvas
+        shadows
+        camera={{ position: [0, 0, 5], fov: 50 }}
+        className="bg-black"
+      >
         <OrthographicCamera
-              makeDefault
-              position={[0, 0, 5]}
-              zoom={zoom}
-              near={0.1}
-              far={1000}
-            />
-      <color attach="background" args={['#000']} />
-      <fog attach="fog" args={['#000', 5, 20]} />
-      {/* <RadialGradientBackground /> */}
-      <VideoBackground />
-      <ambientLight intensity={0.6} />
-      <directionalLight 
-        position={[5, 5, 5]} 
-        intensity={1} 
-        castShadow 
-        shadow-mapSize-width={1024} 
-        shadow-mapSize-height={1024}
-      />
-      
-      <Suspense fallback={null}>
-      <TreeModel position={[0, -1.55, 0]} scale={0.95} />
-        <Particles count={2000} />
-        {/* <Annotations /> */}
-        <Environment preset="night" />
-        <Preload all />
-      </Suspense>
-      
-      <OrbitControls 
-        enableZoom={false}
-        enablePan={false}
-        enableRotate={false}
-        minDistance={3}
-        maxDistance={10}
+          makeDefault
+          position={[0, 0, 5]}
+          zoom={zoom}
+          near={0.1}
+          far={1000}
         />
-
-    </Canvas>
-     <ChatWindowManager />
-        </>
+        <color attach="background" args={['#000']} />
+        <fog attach="fog" args={['#000', 5, 20]} />
+        {/* <RadialGradientBackground /> */}
+        <VideoBackground />
+        <ambientLight intensity={0.3} />
+        <directionalLight 
+          position={[5, 5, 5]} 
+          intensity={1} 
+          castShadow 
+          shadow-mapSize-width={1024} 
+          shadow-mapSize-height={1024}
+        />
+        
+        <Suspense fallback={null}>
+          <Selection>
+            <EffectComposer>
+              <Bloom 
+                luminanceThreshold={0.2}
+                luminanceSmoothing={0.9}
+                intensity={0.5}
+                selectionLayer={1} // Use a specific layer for selection
+              />
+            </EffectComposer>
+            
+            <TreeModel position={[0, -1.55, 0]} scale={0.95} selectionLayer={1} />
+          </Selection>
+          
+          <Particles count={2000} />
+          <Environment preset="night" />
+          <Preload all />
+        </Suspense>
+        
+        <OrbitControls 
+          enableZoom={false}
+          enablePan={false}
+          enableRotate={false}
+          minDistance={3}
+          maxDistance={10}
+        />
+      </Canvas>
+      <ChatWindowManager />
+    </>
   )
 }

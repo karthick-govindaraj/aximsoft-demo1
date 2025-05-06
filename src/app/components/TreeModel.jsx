@@ -16,20 +16,12 @@ const textboxContent = [
 ];
 
 export default function TreeModel({ position = [0, 0, 0], scale = 0 }) {
-  const treeRef = useRef(); // Only Tree
-  const textGroupRef = useRef(); // Only Text
+  const treeRef = useRef();
+  const textGroupRef = useRef();
   const textRefs = useRef(textboxContent.map(() => useRef()));
   const { scene } = useGLTF("/models/tree.glb");
-  const [direction, setDirection] = useState("center");
   const [activeSentenceIndex, setActiveSentenceIndex] = useState(0);
-
-  const handlePointerMove = (e) => {
-    const x = e.clientX;
-    const width = window.innerWidth;
-    if (x < width * 0.4) setDirection("left");
-    else if (x > width * 0.6) setDirection("right");
-    else setDirection("center");
-  };
+  const targetRotation = useRef({ y: 0 });
 
   useEffect(() => {
     if (scene) {
@@ -69,51 +61,59 @@ export default function TreeModel({ position = [0, 0, 0], scale = 0 }) {
       "-=2.5"
     );
 
-    window.addEventListener("mousemove", handlePointerMove);
+    const handleMouseMove = (event) => {
+      // Get normalized mouse position (-1 to 1)
+      const x = (event.clientX / window.innerWidth) * 2 - 1;
+      
+      // Set target rotation based on mouse position
+      targetRotation.current = {
+        y: x * 0.5, // Controls rotation amount (0.5 = moderate rotation)
+      };
+    };
 
+    window.addEventListener("mousemove", handleMouseMove);
     return () => {
       tl.kill();
-      window.removeEventListener("mousemove", handlePointerMove);
+      window.removeEventListener("mousemove", handleMouseMove);
     };
   }, [position, scale, scene]);
 
   useFrame(({ clock }) => {
     if (!treeRef.current || !textGroupRef.current) return;
 
-    // Tree rotation only
-    const targetRotation = { left: 0.3, right: -0.3, center: 0 };
-    gsap.to(treeRef.current.rotation, {
-      y: targetRotation[direction],
-      duration: 5,
-      ease: "power2.out",
-    });
+    // Smoothly interpolate rotation toward target
+    if (treeRef.current) {
+      treeRef.current.rotation.y += 
+        (targetRotation.current.y - treeRef.current.rotation.y) * 0.05;
+    }
 
-    // Text rotation only
     const elapsedTime = clock.getElapsedTime();
-    const radius = 2.5;
-
-    textboxContent.forEach((_, i) => {
-      const angle =
-        (i / textboxContent.length) * Math.PI * 2 + elapsedTime * 0.2;
-
-      const x = Math.sin(angle) * radius;
-      const z = Math.cos(angle) * radius;
-
-      if (textRefs.current[i]?.current) {
-        textRefs.current[i].current.position.set(x, 2, z);
-        textRefs.current[i].current.rotation.set(0, -angle, 0); // Keep text facing center
-      }
-    });
-
-    // Active text detection
+    const radius = 2.3;
     let closestIndex = 0;
     let closestAngle = Math.PI * 2;
 
     textboxContent.forEach((_, i) => {
       const angle =
-        (i / textboxContent.length) * Math.PI * 2 + elapsedTime * 0.2;
-      const currentAngle = angle % (Math.PI * 2);
+        (i / textboxContent.length) * Math.PI * 2 + elapsedTime * 0.1; // slowed rotation
 
+      const x = Math.sin(angle) * radius;
+      const z = Math.cos(angle) * radius;
+
+      const ref = textRefs.current[i]?.current;
+      if (ref) {
+        // Update position and face center
+        ref.position.set(x, 2, z);
+        ref.rotation.set(0, -angle, 0);
+
+        // Smooth opacity animation
+        const targetOpacity = i === activeSentenceIndex ? 1 : 0.05;
+        if (ref.material) {
+          ref.material.opacity += (targetOpacity - ref.material.opacity) * 0.1;
+        }
+      }
+
+      // Determine which sentence is closest to front
+      const currentAngle = angle % (Math.PI * 2);
       const angleToCamera = Math.min(
         Math.abs(currentAngle),
         Math.abs(Math.PI * 2 - currentAngle)
@@ -133,36 +133,35 @@ export default function TreeModel({ position = [0, 0, 0], scale = 0 }) {
 
   return (
     <group>
-      {/* Tree Model (only) */}
+      {/* Tree Model */}
       <group ref={treeRef} position={position} scale={[scale, scale, scale]}>
         <primitive object={scene} />
       </group>
 
-      {/* Texts (only) */}
+      {/* Text Ring */}
       <group ref={textGroupRef} position={[0, -3.8, 0]}>
         {textboxContent.map((sentence, i) => {
-          const radius = 2.5;
+          const radius = 2.3;
           const angle = (i / textboxContent.length) * Math.PI * 2;
-
           const x = Math.sin(angle) * radius;
           const z = Math.cos(angle) * radius;
 
           return (
             <Text
-              font="/fonts/Kode_Mono/static/KodeMono-Regular.ttf"
               key={i}
               ref={textRefs.current[i]}
+              font="/fonts/Kode_Mono/static/KodeMono-Regular.ttf"
               position={[x, 2, z]}
               rotation={[0, -angle, 0]}
-              fontSize={0.09} // Use same font size for all (optional)
+              fontSize={0.09}
               maxWidth={2.5}
               textAlign="center"
               fontWeight={500}
               anchorX="center"
               anchorY="middle"
-              color="white" // Same color for all
-              fillOpacity={i === activeSentenceIndex ? 1 : 0.4} // 👈 Opacity changes based on active
-              outlineWidth={0}
+              color="white"
+              material-transparent
+              material-opacity={0.05} // Start with default
             >
               {sentence}
             </Text>

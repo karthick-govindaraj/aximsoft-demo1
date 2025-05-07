@@ -58,7 +58,7 @@ export default function Scene() {
         <color attach="background" args={['#000']} />
         <fog attach="fog" args={['#000', 5, 20]} />
         <VideoBackground/>
-        <ambientLight intensity={2} />
+        <ambientLight intensity={1} />
         <directionalLight 
           position={[5, 5, 5]} 
           intensity={1} 

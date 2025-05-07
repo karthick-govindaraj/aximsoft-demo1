@@ -48,6 +48,27 @@ const ChatWindow = ({ onClose, isVisible }) => {
     });
   };
 
+  //typewriter effect
+  const typeWriterEffect = (message) => {
+    let i = 0;
+    const batchSize = 8;
+    const total = message.length;
+
+    const interval = setInterval(() => {
+      if (i < total) {
+        i += batchSize;
+        const nextText = message.slice(0, i);
+        setMessages((prevMessages) => [
+          ...prevMessages.slice(0, prevMessages.length - 1),
+          { text: nextText, sender: 'bot' }
+        ]);
+      } else {
+        clearInterval(interval);
+      }
+    }, 1);
+  };
+
+
   const sendMessage = async (message, sender) => {
     if (message.trim() === "") return;
 
@@ -63,7 +84,6 @@ const ChatWindow = ({ onClose, isVisible }) => {
       const loadingMsgIndex = messages.length + 1;
       const newBotMessage = { text: "", sender: "bot", isStreaming: true };
       setMessages((prev) => [...prev, newBotMessage]);
-
       try {
         const stream = await sendQueryToAPI(message, sessionId);
         const reader = stream.getReader();
@@ -82,6 +102,7 @@ const ChatWindow = ({ onClose, isVisible }) => {
 
           const lines = buffer.split("\n");
           buffer = lines.pop();
+
           for (let line of lines) {
             line = line.trim();
             if (line.startsWith("data:")) {
@@ -89,16 +110,14 @@ const ChatWindow = ({ onClose, isVisible }) => {
 
               if (content) {
                 fullMessage += content + " ";
-
-                setMessages((prev) => {
-                  const updated = [...prev];
-                  updated[loadingMsgIndex].text = fullMessage;
-                  return updated;
-                });
               }
             }
           }
         }
+
+        // Now display using the typewriter effect
+        typeWriterEffect(fullMessage.trim());
+
       } catch (error) {
         setMessages((prev) => {
           const updated = [...prev];
@@ -113,7 +132,6 @@ const ChatWindow = ({ onClose, isVisible }) => {
           const updated = [...prev];
           if (updated[loadingMsgIndex]) {
             updated[loadingMsgIndex].isStreaming = false;
-            updated[loadingMsgIndex].text = updated[loadingMsgIndex].text.trim();
           }
           return updated;
         });
@@ -121,7 +139,6 @@ const ChatWindow = ({ onClose, isVisible }) => {
       }
     }
   };
-
 
   const handleButtonClick = () => {
     if (inputMessage.trim() !== "") {

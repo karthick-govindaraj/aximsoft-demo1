@@ -4,8 +4,8 @@ import Image from "next/image";
 import logoMini from "../../../public/images/logo-white.svg";
 import { sendQueryToAPI } from "../../utils/chatApi";
 import { v4 as uuidv4 } from "uuid";
-import btnGrey from "../../../public/images/btn-grey.svg";
-import btnClr from "../../../public/images/btn-clr.svg";
+import btnGrey from "../../../public/images/up-grey.svg";
+import btnClr from "../../../public/images/clr-up.svg";
 
 const ChatWindow = ({ onClose, isVisible }) => {
   const [messages, setMessages] = useState([]);
@@ -51,7 +51,7 @@ const ChatWindow = ({ onClose, isVisible }) => {
   //typewriter effect
   const typeWriterEffect = (message) => {
     let i = 0;
-    const batchSize = 8;
+    const batchSize = 50;
     const total = message.length;
 
     const interval = setInterval(() => {
@@ -76,69 +76,74 @@ const ChatWindow = ({ onClose, isVisible }) => {
       setShowIntro(false);
     }
 
-    setMessages((prev) => [...prev, { text: message, sender }]);
+    setMessages((prev) => [...prev, { text: message, sender, animate: true }]);
 
     if (sender === "user") {
       setLoading(true);
 
-      const loadingMsgIndex = messages.length + 1;
-      const newBotMessage = { text: "", sender: "bot", isStreaming: true };
-      setMessages((prev) => [...prev, newBotMessage]);
-      try {
-        const stream = await sendQueryToAPI(message, sessionId);
-        const reader = stream.getReader();
-        const decoder = new TextDecoder("utf-8");
+      // Wait for user animation (~300ms)
+      setTimeout(async () => {
+        const loadingMsgIndex = messages.length + 1;
+        const newBotMessage = { text: "", sender: "bot", isStreaming: true };
+        setMessages((prev) => [...prev, newBotMessage]);
 
-        let done = false;
-        let buffer = "";
-        let fullMessage = "";
+        try {
+          const stream = await sendQueryToAPI(message, sessionId);
+          const reader = stream.getReader();
+          const decoder = new TextDecoder("utf-8");
 
-        while (!done) {
-          const { value, done: doneReading } = await reader.read();
-          done = doneReading;
+          let done = false;
+          let buffer = "";
+          let fullMessage = "";
 
-          const chunk = decoder.decode(value || new Uint8Array(), { stream: true });
-          buffer += chunk;
+          while (!done) {
+            const { value, done: doneReading } = await reader.read();
+            done = doneReading;
 
-          const lines = buffer.split("\n");
-          buffer = lines.pop();
+            const chunk = decoder.decode(value || new Uint8Array(), { stream: true });
+            buffer += chunk;
 
-          for (let line of lines) {
-            line = line.trim();
-            if (line.startsWith("data:")) {
-              const content = line.replace(/^data:\s*/, "");
+            const lines = buffer.split("\n");
+            buffer = lines.pop();
 
-              if (content) {
-                fullMessage += content + " ";
+            for (let line of lines) {
+              line = line.trim();
+              if (line.startsWith("data:")) {
+                const content = line.replace(/^data:\s*/, "");
+
+                if (content) {
+                  fullMessage += content + " ";
+                }
               }
             }
           }
+
+          // Show bot response with typewriter effect
+          typeWriterEffect(fullMessage.trim());
+
+        } catch (error) {
+          setMessages((prev) => {
+            const updated = [...prev];
+            updated[loadingMsgIndex] = {
+              text: "Something went wrong. Try again later.",
+              sender: "bot",
+            };
+            return updated;
+          });
+        } finally {
+          setMessages((prev) => {
+            const updated = [...prev];
+            if (updated[loadingMsgIndex]) {
+              updated[loadingMsgIndex].isStreaming = false;
+            }
+            return updated;
+          });
+          setLoading(false);
         }
-
-        // Now display using the typewriter effect
-        typeWriterEffect(fullMessage.trim());
-
-      } catch (error) {
-        setMessages((prev) => {
-          const updated = [...prev];
-          updated[loadingMsgIndex] = {
-            text: "Something went wrong. Try again later.",
-            sender: "bot",
-          };
-          return updated;
-        });
-      } finally {
-        setMessages((prev) => {
-          const updated = [...prev];
-          if (updated[loadingMsgIndex]) {
-            updated[loadingMsgIndex].isStreaming = false;
-          }
-          return updated;
-        });
-        setLoading(false);
-      }
+      }, 550);
     }
   };
+
 
   const handleButtonClick = () => {
     if (inputMessage.trim() !== "") {
@@ -166,6 +171,11 @@ const ChatWindow = ({ onClose, isVisible }) => {
       </div>
 
       <div className="fixed inset-0 z-0 backdrop-blur-lg bg-black/30 transition-opacity duration-300" />
+      <div className="flex icon-wrp items-center justify-center">
+        <img src='/images/fb-icon.svg' alt="Facebook" />
+        <img src='/images/link-icon.svg' alt="LinkedIn" />
+        <img src='/images/twit-icon.svg' alt="Twitter" />
+      </div>
       <div
         className={`chat-bot transition-all duration-300 transform ${isVisible
           ? "opacity-100 translate-y-0 scale-100"
@@ -184,23 +194,34 @@ const ChatWindow = ({ onClose, isVisible }) => {
               {messages.map((msg, index) => (
                 <div
                   key={index}
-                  className={`flex items-center gap-2 mb-3 ${msg.sender === "user"
-                    ? "user-message justify-end"
-                    : "bot-message justify-start"
+                  className={`flex flex-col gap-1 mb-3 ${msg.sender === "user"
+                    ? "items-end"
+                    : "items-start"
                     }`}
                 >
-                  {msg.isLoading || msg.isStreaming ? (
-                    <div className="loader d-flex align-items-center justify-content-between">
-                      <div className="dot"></div>
-                      <div className="dot"></div>
-                      <div className="dot"></div>
+                  {msg.sender === "bot" && (
+                    <div className="ai-label-gradient font-semibold">
+                      AI Agent
                     </div>
-                  ) : (
-                    <div className="text-msg">{msg.text}</div>
                   )}
+                  <div
+                    className={`flex items-center gap-2 ${msg.sender === "user"
+                      ? "user-message justify-end slide-up"
+                      : "bot-message justify-start"
+                      }`}
+                  >
+                    {msg.isLoading || msg.isStreaming ? (
+                      <div className="loader d-flex align-items-center justify-content-between">
+                        <div className="dot"></div>
+                        <div className="dot"></div>
+                        <div className="dot"></div>
+                      </div>
+                    ) : (
+                      <div className="text-msg">{msg.text}</div>
+                    )}
+                  </div>
                 </div>
               ))}
-
             </div>
             <div ref={messagesEndRef} />
           </div>
@@ -232,12 +253,6 @@ const ChatWindow = ({ onClose, isVisible }) => {
               SEND
             </button>
           </div> */}
-
-          <div className="flex icon-wrp items-center justify-center">
-            <img src='/images/fb-icon.svg' alt="Facebook" />
-            <img src='/images/link-icon.svg' alt="LinkedIn" />
-            <img src='/images/twit-icon.svg' alt="Twitter" />
-          </div>
         </div>
       </div>
     </>

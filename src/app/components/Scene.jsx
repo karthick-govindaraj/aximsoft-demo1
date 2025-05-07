@@ -6,7 +6,6 @@ import { OrbitControls, OrthographicCamera, useProgress, Environment, Preload  }
 import TreeModel from './TreeModel'
 import Particles from './Particles'
 import VideoBackground from './VideoBackground'
-import PanoramaBackground from './PanoramaBackground'
 import Loader from './Loader'
 import ChatWindowManager from './ChatWindowManager'
 import { EffectComposer, Bloom ,Selection} from '@react-three/postprocessing';

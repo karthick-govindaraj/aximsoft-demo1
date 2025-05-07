@@ -1,6 +1,6 @@
 export const sendQueryToAPI = async (query, session_id) => {
     try {
-        const response = await fetch("http://127.0.0.1:8000/axim/query", {
+        const response = await fetch("http://172.203.248.99:8000/axim/query", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

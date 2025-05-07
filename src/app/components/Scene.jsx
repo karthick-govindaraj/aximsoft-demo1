@@ -6,7 +6,7 @@ import { OrbitControls, OrthographicCamera, useProgress, Environment, Preload  }
 import TreeModel from './TreeModel'
 import Particles from './Particles'
 import VideoBackground from './VideoBackground'
-import RadialGradientBackground from './RadialGradientBackground'
+import PanoramaBackground from './PanoramaBackground'
 import Loader from './Loader'
 import ChatWindowManager from './ChatWindowManager'
 import { EffectComposer, Bloom ,Selection} from '@react-three/postprocessing';
@@ -43,7 +43,7 @@ export default function Scene() {
 
   return (
     <>
-      <LoadingManager />
+      {/* <LoadingManager /> */}
       <Canvas
         shadows
         camera={{ position: [0, 0, 5], fov: 50 }}
@@ -58,9 +58,8 @@ export default function Scene() {
         />
         <color attach="background" args={['#000']} />
         <fog attach="fog" args={['#000', 5, 20]} />
-        {/* <RadialGradientBackground /> */}
-        <VideoBackground />
-        <ambientLight intensity={0.3} />
+        <VideoBackground/>
+        <ambientLight intensity={2} />
         <directionalLight 
           position={[5, 5, 5]} 
           intensity={1} 
@@ -71,19 +70,19 @@ export default function Scene() {
         
         <Suspense fallback={null}>
           <Selection>
-            <EffectComposer>
+            {/* <EffectComposer>
               <Bloom 
                 luminanceThreshold={0.2}
                 luminanceSmoothing={0.9}
                 intensity={0.5}
-                selectionLayer={1} // Use a specific layer for selection
+                selectionLayer={1} 
               />
-            </EffectComposer>
+            </EffectComposer> */}
             
             <TreeModel position={[0, -1.55, 0]} scale={0.95} selectionLayer={1} />
           </Selection>
           
-          <Particles count={2000} />
+          {/* <Particles count={2000} /> */}
           <Environment preset="night" />
           <Preload all />
         </Suspense>

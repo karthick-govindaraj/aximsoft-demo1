@@ -86,7 +86,7 @@ export default function VideoBackground() {
       {/* Dark Overlay */}
       <mesh position={[0, 0, -9.9]}>
         <planeGeometry args={[width, height]} />
-        <meshBasicMaterial color="black" transparent opacity={0.91} />
+        <meshBasicMaterial color="black" transparent opacity={0.2} />
       </mesh>
     </>
   )

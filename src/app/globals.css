@@ -118,9 +118,9 @@ canvas {
 }
 
 .messages {
-  height: 550px;
+  height: 770px;
   overflow-y: auto;
-  /* padding-bottom: 100px; */
+  padding-top: 50px;
 }
 
 .chat__txt--wrp input {
@@ -207,6 +207,13 @@ fieldset:disabled .btn {
 .btn-wrp {
   text-align: center;
   margin-top: 40px;
+}
+
+.btn-img {
+  cursor: pointer;
+  position: absolute;
+  right: 0;
+
 }
 
 /* loader styles */

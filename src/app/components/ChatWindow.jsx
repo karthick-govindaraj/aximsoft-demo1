@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import logo from "../../../public/images/axim-logo.svg";
-import { sendQueryToAPI } from "../../utils/chatApi"; // adjust path as needed
+// import logo from "../../../public/images/axim-logo.svg";
+import logoMini from "../../../public/images/logo-white.svg";
+import { sendQueryToAPI } from "../../utils/chatApi";
 import { v4 as uuidv4 } from "uuid";
+import btnGrey from "../../../public/images/btn-grey.svg";
+import btnClr from "../../../public/images/btn-clr.svg";
 
 const ChatWindow = ({ onClose, isVisible }) => {
   const [messages, setMessages] = useState([]);
@@ -77,23 +80,19 @@ const ChatWindow = ({ onClose, isVisible }) => {
           const chunk = decoder.decode(value || new Uint8Array(), { stream: true });
           buffer += chunk;
 
-          // Split by newline in case multiple events are sent
           const lines = buffer.split("\n");
-          buffer = lines.pop(); // Save any partial line for next read
-
+          buffer = lines.pop();
           for (let line of lines) {
             line = line.trim();
             if (line.startsWith("data:")) {
               const content = line.replace(/^data:\s*/, "");
 
               if (content) {
-                // Append content to fullMessage (accumulating it over the stream)
                 fullMessage += content + " ";
 
-                // Update the state only once the message is ready
                 setMessages((prev) => {
                   const updated = [...prev];
-                  updated[loadingMsgIndex].text = fullMessage; // Update the message text progressively
+                  updated[loadingMsgIndex].text = fullMessage;
                   return updated;
                 });
               }
@@ -142,7 +141,7 @@ const ChatWindow = ({ onClose, isVisible }) => {
     <>
       <div className="header w-full flex justify-between absolute z-10">
         <div className="axim-logo">
-          <Image src={logo} alt="logo" />
+          <Image src={logoMini} alt="logo" />
         </div>
         <div onClick={onClose} aria-label="Close" className="c-point close-icon">
           <img src="/images/close-icon.svg" alt="close" className="h-8 w-auto" />
@@ -199,8 +198,15 @@ const ChatWindow = ({ onClose, isVisible }) => {
               onKeyDown={handleKeyPress}
               disabled={loading}
             />
+            <Image
+              src={inputMessage.trim() === "" ? btnGrey : btnClr}
+              onClick={handleButtonClick}
+              alt="button"
+              className="btn-img"
+            />
+
           </div>
-          <div className="btn-wrp">
+          {/* <div className="btn-wrp">
             <button
               className="btn p-0 c-point"
               onClick={handleButtonClick}
@@ -208,7 +214,7 @@ const ChatWindow = ({ onClose, isVisible }) => {
             >
               SEND
             </button>
-          </div>
+          </div> */}
 
           <div className="flex icon-wrp items-center justify-center">
             <img src='/images/fb-icon.svg' alt="Facebook" />

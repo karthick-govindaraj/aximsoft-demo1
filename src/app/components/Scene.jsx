@@ -1,23 +1,26 @@
 "use client";
- 
+
 import { Canvas } from "@react-three/fiber";
 import { Suspense, useState, useEffect } from "react";
 import {
   OrbitControls,
   OrthographicCamera,
+  useProgress,
   Environment,
   Preload,
 } from "@react-three/drei";
 import TreeModel from "./TreeModel";
 import Particles from "./Particles";
 import VideoBackground from "./VideoBackground";
+import RadialGradientBackground from "./RadialGradientBackground";
+import Loader from "./Loader";
 import ChatWindowManager from "./ChatWindowManager";
 import { EffectComposer, Bloom, Selection } from "@react-three/postprocessing";
- 
+
 export default function Scene() {
   const [isMounted, setIsMounted] = useState(false);
   const [zoom, setZoom] = useState(getZoom());
- 
+
   function getZoom() {
     const baseWidth = 1440;
     const baseZoom = 180;
@@ -26,27 +29,27 @@ export default function Scene() {
       return (currentWidth / baseWidth) * baseZoom;
     }
   }
- 
-  // function LoadingManager() {
-  //   const { progress, active } = useProgress();
-  //   return <Loader progress={progress} isLoading={active} />;
-  // }
- 
+
+  function LoadingManager() {
+    const { progress, active } = useProgress();
+    return <Loader progress={progress} isLoading={active} />;
+  }
+
   useEffect(() => {
     const handleResize = () => setZoom(getZoom());
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
- 
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
- 
+
   if (!isMounted) return null;
- 
+
   return (
     <>
-      {/* <LoadingManager /> */}
+      <LoadingManager />
       <Canvas
         shadows
         camera={{ position: [0, 0, 5], fov: 50 }}
@@ -71,7 +74,7 @@ export default function Scene() {
           shadow-mapSize-width={1024}
           shadow-mapSize-height={1024}
         />
- 
+
         <Suspense fallback={null}>
           <Selection>
             <EffectComposer>
@@ -82,19 +85,19 @@ export default function Scene() {
                 selectionLayer={10} // Use a specific layer for selection
               />
             </EffectComposer>
- 
+
             <TreeModel
               position={[0, -1.55, 0]}
               scale={0.95}
               selectionLayer={1}
             />
           </Selection>
- 
+
           {/* <Particles count={2000} /> */}
           <Environment preset="night" />
           <Preload all />
         </Suspense>
- 
+
         <OrbitControls
           enableZoom={false}
           enablePan={false}

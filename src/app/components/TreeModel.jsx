@@ -64,7 +64,7 @@ export default function TreeModel({ position = [0, 0, 0], scale = 0 }) {
     const handleMouseMove = (event) => {
       // Get normalized mouse position (-1 to 1)
       const x = (event.clientX / window.innerWidth) * 2 - 1;
-      
+
       // Set target rotation based on mouse position
       targetRotation.current = {
         y: x * 0.5, // Controls rotation amount (0.5 = moderate rotation)
@@ -83,7 +83,7 @@ export default function TreeModel({ position = [0, 0, 0], scale = 0 }) {
 
     // Smoothly interpolate rotation toward target
     if (treeRef.current) {
-      treeRef.current.rotation.y += 
+      treeRef.current.rotation.y +=
         (targetRotation.current.y - treeRef.current.rotation.y) * 0.05;
     }
 
@@ -125,7 +125,6 @@ export default function TreeModel({ position = [0, 0, 0], scale = 0 }) {
       }
     });
 
-    
     if (closestIndex !== activeSentenceIndex) {
       setActiveSentenceIndex(closestIndex);
     }

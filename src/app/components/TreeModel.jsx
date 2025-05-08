@@ -32,11 +32,11 @@ export default function TreeModel({ position = [0, 0, 0], scale = 0 }) {
           if (Array.isArray(material)) {
             material.forEach((mat) => {
               mat.transparent = true;
-              mat.emissiveIntensity = 0.75;
+              mat.emissiveIntensity = 1;
             });
           } else {
             material.transparent = true;
-            material.emissiveIntensity = 0.75;
+            material.emissiveIntensity = 1;
           }
         }
       });

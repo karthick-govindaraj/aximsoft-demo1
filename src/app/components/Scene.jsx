@@ -1,45 +1,49 @@
-'use client'
-
-import { Canvas } from '@react-three/fiber'
-import { Suspense, useState, useEffect } from 'react'
-import { OrbitControls, OrthographicCamera, useProgress, Environment, Preload  } from '@react-three/drei'
-import TreeModel from './TreeModel'
-import Particles from './Particles'
-import VideoBackground from './VideoBackground'
-import Loader from './Loader'
-import ChatWindowManager from './ChatWindowManager'
-import { EffectComposer, Bloom ,Selection} from '@react-three/postprocessing';
-
+"use client";
+ 
+import { Canvas } from "@react-three/fiber";
+import { Suspense, useState, useEffect } from "react";
+import {
+  OrbitControls,
+  OrthographicCamera,
+  Environment,
+  Preload,
+} from "@react-three/drei";
+import TreeModel from "./TreeModel";
+import Particles from "./Particles";
+import VideoBackground from "./VideoBackground";
+import ChatWindowManager from "./ChatWindowManager";
+import { EffectComposer, Bloom, Selection } from "@react-three/postprocessing";
+ 
 export default function Scene() {
-  const [isMounted, setIsMounted] = useState(false)
+  const [isMounted, setIsMounted] = useState(false);
   const [zoom, setZoom] = useState(getZoom());
-
+ 
   function getZoom() {
     const baseWidth = 1440;
     const baseZoom = 180;
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const currentWidth = window.innerWidth;
       return (currentWidth / baseWidth) * baseZoom;
     }
   }
-  
-  function LoadingManager() {
-    const { progress, active } = useProgress()
-    return <Loader progress={progress} isLoading={active} />
-  }
-
+ 
+  // function LoadingManager() {
+  //   const { progress, active } = useProgress();
+  //   return <Loader progress={progress} isLoading={active} />;
+  // }
+ 
   useEffect(() => {
     const handleResize = () => setZoom(getZoom());
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
+ 
   useEffect(() => {
-    setIsMounted(true)
-  }, [])
-
-  if (!isMounted) return null
-
+    setIsMounted(true);
+  }, []);
+ 
+  if (!isMounted) return null;
+ 
   return (
     <>
       {/* <LoadingManager /> */}
@@ -55,21 +59,22 @@ export default function Scene() {
           near={0.1}
           far={1000}
         />
-        <color attach="background" args={['#000']} />
-        <fog attach="fog" args={['#000', 5, 20]} />
-        <VideoBackground/>
+        <color attach="background" args={["#000"]} />
+        <fog attach="fog" args={["#000", 5, 20]} />
+        {/* <RadialGradientBackground /> */}
+        <VideoBackground />
         <ambientLight intensity={2.5} />
-        <directionalLight 
-          position={[5, 5, 5]} 
-          intensity={1} 
-          castShadow 
-          shadow-mapSize-width={1024} 
+        <directionalLight
+          position={[5, 5, 5]}
+          intensity={0}
+          castShadow
+          shadow-mapSize-width={1024}
           shadow-mapSize-height={1024}
         />
-        
+ 
         <Suspense fallback={null}>
           <Selection>
-          <EffectComposer>
+            <EffectComposer>
               <Bloom
                 luminanceThreshold={5.5}
                 luminanceSmoothing={5.5}
@@ -77,15 +82,20 @@ export default function Scene() {
                 selectionLayer={10} // Use a specific layer for selection
               />
             </EffectComposer>
-            <TreeModel position={[0, -1.55, 0]} scale={0.95} selectionLayer={1} />
+ 
+            <TreeModel
+              position={[0, -1.55, 0]}
+              scale={0.95}
+              selectionLayer={1}
+            />
           </Selection>
-          
+ 
           {/* <Particles count={2000} /> */}
           <Environment preset="night" />
           <Preload all />
         </Suspense>
-        
-        <OrbitControls 
+ 
+        <OrbitControls
           enableZoom={false}
           enablePan={false}
           enableRotate={false}
@@ -95,5 +105,5 @@ export default function Scene() {
       </Canvas>
       <ChatWindowManager />
     </>
-  )
+  );
 }

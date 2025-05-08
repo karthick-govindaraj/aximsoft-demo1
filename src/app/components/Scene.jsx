@@ -58,7 +58,7 @@ export default function Scene() {
         <color attach="background" args={['#000']} />
         <fog attach="fog" args={['#000', 5, 20]} />
         <VideoBackground/>
-        <ambientLight intensity={1} />
+        <ambientLight intensity={2.5} />
         <directionalLight 
           position={[5, 5, 5]} 
           intensity={1} 
@@ -69,15 +69,14 @@ export default function Scene() {
         
         <Suspense fallback={null}>
           <Selection>
-            {/* <EffectComposer>
-              <Bloom 
-                luminanceThreshold={0.2}
-                luminanceSmoothing={0.9}
-                intensity={0.5}
-                selectionLayer={1} 
+          <EffectComposer>
+              <Bloom
+                luminanceThreshold={5.5}
+                luminanceSmoothing={5.5}
+                intensity={1}
+                selectionLayer={10} // Use a specific layer for selection
               />
-            </EffectComposer> */}
-            
+            </EffectComposer>
             <TreeModel position={[0, -1.55, 0]} scale={0.95} selectionLayer={1} />
           </Selection>
           

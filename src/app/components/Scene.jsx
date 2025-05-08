@@ -5,15 +5,11 @@ import { Suspense, useState, useEffect } from "react";
 import {
   OrbitControls,
   OrthographicCamera,
-  useProgress,
   Environment,
   Preload,
 } from "@react-three/drei";
 import TreeModel from "./TreeModel";
-import Particles from "./Particles";
 import VideoBackground from "./VideoBackground";
-import RadialGradientBackground from "./RadialGradientBackground";
-import Loader from "./Loader";
 import ChatWindowManager from "./ChatWindowManager";
 import { EffectComposer, Bloom, Selection } from "@react-three/postprocessing";
 
@@ -29,12 +25,6 @@ export default function Scene() {
       return (currentWidth / baseWidth) * baseZoom;
     }
   }
-
-  function LoadingManager() {
-    const { progress, active } = useProgress();
-    return <Loader progress={progress} isLoading={active} />;
-  }
-
   useEffect(() => {
     const handleResize = () => setZoom(getZoom());
     window.addEventListener("resize", handleResize);
@@ -49,7 +39,6 @@ export default function Scene() {
 
   return (
     <>
-      <LoadingManager />
       <Canvas
         shadows
         camera={{ position: [0, 0, 5], fov: 50 }}
